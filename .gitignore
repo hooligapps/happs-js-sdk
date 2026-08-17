@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules/
+
+# Generated package bundles
+/dist/
+
+# IDE and OS files
+/.idea/
+.DS_Store
+
+# Logs and test output
+*.log
+/coverage/
+/.nyc_output/
+
+# Local npm artifacts
+*.tgz
