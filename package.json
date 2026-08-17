@@ -4,6 +4,7 @@
   "description": "Framework-agnostic browser SDK for Hooli Games portal integrations",
   "scripts": {
     "build": "node scripts/build.cjs",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit --strict --skipLibCheck --lib ES2020,DOM index.d.ts core.d.ts unity.d.ts",
     "test": "npm run build && node --test test/*.test.cjs",
     "validate": "npm run typecheck && npm test"
