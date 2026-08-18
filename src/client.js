@@ -7,7 +7,7 @@ import {
 } from "./protocol.js";
 import { createPortalTransport } from "./portal-transport.js";
 
-export const SDK_VERSION = "1.1.2";
+export const SDK_VERSION = "1.1.3";
 
 var DEFAULTS = Object.freeze({
   ssoLoginUrl: "/api/sign",
