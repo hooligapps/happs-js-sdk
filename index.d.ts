@@ -33,8 +33,8 @@ export interface HAppsInitResult {
 }
 
 export type HAppsAuthPopupResult =
-  | { flow: "ticket"; ticket: string }
-  | { flow: "cookie" }
+  | { flow: "ticket"; ticket: string; payload?: unknown }
+  | { flow: "cookie"; payload?: unknown }
   | { flow: "cancelled" };
 
 export interface HAppsPaymentResult {

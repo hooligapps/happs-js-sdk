@@ -7,7 +7,7 @@ import {
 } from "./protocol.js";
 import { createPortalTransport } from "./portal-transport.js";
 
-export const SDK_VERSION = "1.1.0";
+export const SDK_VERSION = "1.1.2";
 
 var DEFAULTS = Object.freeze({
   ssoLoginUrl: "/api/sign",
@@ -454,14 +454,15 @@ export function createHAppsClient(initialConfig) {
         if (event.origin !== expectedOrigin || event.source !== popup) return;
         var data = event.data;
         if (!data || typeof data !== "object") return;
+        var payload = data.payload === undefined ? {} : { payload: data.payload };
         if (
           data.type === "auth_ticket" &&
           typeof data.ticket === "string" &&
           data.ticket
         ) {
-          finish({ flow: "ticket", ticket: data.ticket });
+          finish({ flow: "ticket", ticket: data.ticket, ...payload });
         } else if (data.type === "auth_done") {
-          finish({ flow: "cookie" });
+          finish({ flow: "cookie", ...payload });
         }
       }
 
