@@ -1,5 +1,6 @@
 export interface HAppsUser {
-  userId: string;
+  id: string;
+  userId?: string;
   userName?: string;
   verified: boolean;
 }

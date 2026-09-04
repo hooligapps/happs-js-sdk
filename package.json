@@ -1,6 +1,6 @@
 {
   "name": "happs-js-sdk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Framework-agnostic browser SDK for Hooli Games portal integrations",
   "scripts": {
     "build": "node scripts/build.cjs",

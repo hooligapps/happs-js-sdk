@@ -13,6 +13,9 @@ function isValidUserData(value) {
   return (
     isObject(value) &&
     (typeof value.id === "string" || typeof value.id === "number") &&
+    (value.userId === undefined ||
+      typeof value.userId === "string" ||
+      typeof value.userId === "number") &&
     typeof value.verified === "boolean"
   );
 }
@@ -70,7 +73,11 @@ export function extractSignature(data) {
 export function extractUser(data) {
   if (!data || !isValidUserData(data.userData)) return null;
   return {
-    userId: String(data.userData.id),
+    id: String(data.userData.id),
+    userId:
+      data.userData.userId === undefined
+        ? undefined
+        : String(data.userData.userId),
     userName:
       typeof data.userData.userName === "string"
         ? data.userData.userName

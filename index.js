@@ -80,7 +80,7 @@
     return !!value && typeof value === "object" && !Array.isArray(value);
   }
   function isValidUserData(value) {
-    return isObject(value) && (typeof value.id === "string" || typeof value.id === "number") && typeof value.verified === "boolean";
+    return isObject(value) && (typeof value.id === "string" || typeof value.id === "number") && (value.userId === void 0 || typeof value.userId === "string" || typeof value.userId === "number") && typeof value.verified === "boolean";
   }
   function validatePlatformMessage(data) {
     if (!isObject(data)) return "Message is not an object";
@@ -128,7 +128,8 @@
   function extractUser(data) {
     if (!data || !isValidUserData(data.userData)) return null;
     return {
-      userId: String(data.userData.id),
+      id: String(data.userData.id),
+      userId: data.userData.userId === void 0 ? void 0 : String(data.userData.userId),
       userName: typeof data.userData.userName === "string" ? data.userData.userName : void 0,
       verified: data.userData.verified
     };
@@ -155,7 +156,7 @@
   }
 
   // src/client.js
-  var SDK_VERSION = "1.1.0";
+  var SDK_VERSION = "1.1.1";
   var DEFAULTS = Object.freeze({
     ssoLoginUrl: "/api/sign",
     isPortal: true,
@@ -337,6 +338,7 @@
         case "profile_updated":
           if (!userData) return;
           userData = {
+            id: userData.id,
             userId: userData.userId,
             userName: userData.userName,
             verified: data.verified
@@ -540,10 +542,11 @@
           if (event.origin !== expectedOrigin || event.source !== popup) return;
           var data = event.data;
           if (!data || typeof data !== "object") return;
+          var payload = data.payload === void 0 ? {} : { payload: data.payload };
           if (data.type === "auth_ticket" && typeof data.ticket === "string" && data.ticket) {
-            finish({ flow: "ticket", ticket: data.ticket });
+            finish({ flow: "ticket", ticket: data.ticket, ...payload });
           } else if (data.type === "auth_done") {
-            finish({ flow: "cookie" });
+            finish({ flow: "cookie", ...payload });
           }
         }
         browserWindow.addEventListener("message", onMessage, false);
@@ -583,6 +586,7 @@
       },
       getUser: function() {
         return userData ? {
+          id: userData.id,
           userId: userData.userId,
           userName: userData.userName,
           verified: userData.verified

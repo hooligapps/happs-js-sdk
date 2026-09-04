@@ -7,7 +7,7 @@ import {
 } from "./protocol.js";
 import { createPortalTransport } from "./portal-transport.js";
 
-export const SDK_VERSION = "1.1.0";
+export const SDK_VERSION = "1.1.1";
 
 var DEFAULTS = Object.freeze({
   ssoLoginUrl: "/api/sign",
@@ -209,6 +209,7 @@ export function createHAppsClient(initialConfig) {
       case "profile_updated":
         if (!userData) return;
         userData = {
+          id: userData.id,
           userId: userData.userId,
           userName: userData.userName,
           verified: data.verified,
@@ -510,6 +511,7 @@ export function createHAppsClient(initialConfig) {
     getUser: function() {
       return userData
         ? {
+            id: userData.id,
             userId: userData.userId,
             userName: userData.userName,
             verified: userData.verified,
