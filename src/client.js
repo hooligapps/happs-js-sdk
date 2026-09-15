@@ -334,6 +334,7 @@ export function createHAppsClient(initialConfig) {
       capabilities: [
         "get_profile",
         "open_payment",
+        "open_external_url",
         "popup_auth",
         "portal_auth",
         "open_age_verification",
@@ -608,6 +609,13 @@ export function createHAppsClient(initialConfig) {
         });
         postToPortal({ type: "open_checkout", orderId: orderId });
       });
+    },
+
+    openExternalUrl: function(url) {
+      if (typeof url !== "string" || !url.trim()) {
+        throw makeError(ErrorCodes.INVALID_PAYLOAD, "url is required");
+      }
+      postToPortal({ type: "open_external_url", url: url.trim() });
     },
 
     setFullscreen: function(enabled) {

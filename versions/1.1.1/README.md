@@ -123,35 +123,6 @@ unsubscribe();
 
 Available events: `ready`, `auth_complete`, `user_changed`, `payment`, `payment_complete`, `popup_auth_result`, and `error`.
 
-## Age verification on a game domain
-
-Use the separate module when age verification is started from the game domain
-rather than from inside the portal. Its public API is compatible with the
-standalone `age-verifier` browser client:
-
-```ts
-import AgeVerifier from "happs-js-sdk/age-verification";
-
-const ageVerifier = new AgeVerifier({
-  verificationApiDomain: "https://verification.service.com",
-  backendEndpoints: {
-    checkNeeded: "/api/age-verification/check-needed",
-    startVerification: "/api/age-verification/start",
-    checkResult: "/api/age-verification/check-result",
-    updateResult: "/api/age-verification/update-result",
-  },
-  onVerificationNeeded: (response) => showVerificationButton(response),
-  onVerificationNotNeeded: (response) => continueGame(response),
-  onSuccess: (response) => continueGame(response),
-  onFail: (response) => showVerificationFailure(response),
-  onError: (error) => showVerificationError(error),
-});
-
-await ageVerifier.checkVerificationNeeded();
-await ageVerifier.startVerification();
-await ageVerifier.updateVerificationResult();
-```
-
 ## Build
 
 ```bash

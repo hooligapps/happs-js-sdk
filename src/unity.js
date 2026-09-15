@@ -125,6 +125,14 @@ export function createUnityBridge(client, bridgeConfig) {
     }
   }
 
+  function openExternalUrl(payload) {
+    if (typeof payload.url !== "string" || !payload.url.trim()) {
+      sendError(makeError(ErrorCodes.INVALID_PAYLOAD, "url is required"));
+      return;
+    }
+    client.openExternalUrl(payload.url);
+  }
+
   async function openPopup(payload) {
     if (typeof payload.url !== "string" || !payload.url) {
       send({
@@ -182,6 +190,9 @@ export function createUnityBridge(client, bridgeConfig) {
         break;
       case "open_payment":
         void openPayment(payload);
+        break;
+      case "open_external_url":
+        openExternalUrl(payload);
         break;
       case "popup_auth":
         void openPopup(payload);

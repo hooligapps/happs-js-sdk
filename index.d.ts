@@ -114,6 +114,7 @@ export interface HAppsClient {
     callbackOrigin?: string,
   ): Promise<HAppsAuthPopupResult>;
   openPayment(orderId: string): Promise<HAppsPaymentResult>;
+  openExternalUrl(url: string): void;
   setFullscreen(enabled: boolean): void;
   setTheaterMode(enabled: boolean): void;
   openAgeVerification(payload?: { adultMode?: boolean }): void;

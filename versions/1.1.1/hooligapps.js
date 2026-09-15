@@ -454,6 +454,7 @@
         capabilities: [
           "get_profile",
           "open_payment",
+          "open_external_url",
           "popup_auth",
           "portal_auth",
           "open_age_verification",
@@ -672,6 +673,12 @@
           postToPortal({ type: "open_checkout", orderId });
         });
       },
+      openExternalUrl: function(url) {
+        if (typeof url !== "string" || !url.trim()) {
+          throw makeError(ErrorCodes.INVALID_PAYLOAD, "url is required");
+        }
+        postToPortal({ type: "open_external_url", url: url.trim() });
+      },
       setFullscreen: function(enabled) {
         postToPortal({ type: "set_fullscreen", enabled: !!enabled });
       },
@@ -856,6 +863,13 @@
         sendError(error);
       }
     }
+    function openExternalUrl(payload) {
+      if (typeof payload.url !== "string" || !payload.url.trim()) {
+        sendError(makeError(ErrorCodes.INVALID_PAYLOAD, "url is required"));
+        return;
+      }
+      client2.openExternalUrl(payload.url);
+    }
     function run(action) {
       try {
         action();
@@ -890,6 +904,9 @@
           break;
         case "open_payment":
           void openPayment(payload);
+          break;
+        case "open_external_url":
+          openExternalUrl(payload);
           break;
         case "popup_auth":
           void openPopup(payload);

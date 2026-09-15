@@ -18,6 +18,7 @@ export interface HAppsUnityInputMap {
   portal_auth: Record<string, never>;
   get_profile: Record<string, never>;
   open_payment: { orderId: string };
+  open_external_url: { url: string };
   popup_auth: { url: string; callbackOrigin?: string };
   set_fullscreen: { enabled: boolean };
   set_theater_mode: { enabled: boolean };
@@ -33,4 +34,3 @@ export declare function createUnityBridge(
   client: HAppsClient,
   config: HAppsUnityConfig,
 ): HAppsUnityBridge;
-
