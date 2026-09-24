@@ -7,7 +7,7 @@ import {
 } from "./protocol.js";
 import { createPortalTransport } from "./portal-transport.js";
 
-export const SDK_VERSION = "1.1.1";
+export const SDK_VERSION = "1.1.2";
 
 var DEFAULTS = Object.freeze({
   ssoLoginUrl: "/api/sign",
@@ -30,6 +30,7 @@ export function createHAppsClient(initialConfig) {
   var transport = null;
   var userData = null;
   var signatureData = null;
+  var ssoData = null;
   var initialized = false;
   var ready = false;
   var isPortal = false;
@@ -63,6 +64,7 @@ export function createHAppsClient(initialConfig) {
     return {
       user: HApps.getUser(),
       signature: HApps.getSignature(),
+      ssoData: ssoData,
     };
   }
 
@@ -129,6 +131,7 @@ export function createHAppsClient(initialConfig) {
         if (generation !== loginGeneration || !initialized) return;
 
         signatureData = { signature: data.signature };
+        ssoData = data;
         var firstReady = !ready;
         ready = true;
         var connection = getConnection();
