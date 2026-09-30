@@ -21,6 +21,7 @@ export function createUnityBridge(client, bridgeConfig) {
     client.on("user_changed", send),
     client.on("payment", send),
     client.on("payment_complete", send),
+    client.on("age_verification_complete", send),
     client.on("popup_auth_result", send),
     client.on("error", function(error) {
       send({ type: "error", error: error });
@@ -209,7 +210,7 @@ export function createUnityBridge(client, bridgeConfig) {
         break;
       case "open_age_verification":
         run(function() {
-          client.openAgeVerification({ adultMode: payload.adultMode !== false });
+          client.openAgeVerification();
         });
         break;
       default:

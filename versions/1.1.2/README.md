@@ -107,7 +107,13 @@ await HApps.openPayment(orderId);
 
 HApps.setFullscreen(true);
 HApps.setTheaterMode(true);
-HApps.openAgeVerification({ adultMode: true });
+// Subscribe before opening the confirmation dialog.
+HApps.on("age_verification_complete", ({ verified }) => {
+  if (verified) {
+    // The player confirmed 18+ in the portal dialog.
+  }
+});
+HApps.openAgeVerification();
 HApps.destroy();
 ```
 
@@ -121,7 +127,7 @@ const unsubscribe = HApps.on("user_changed", ({ userData }) => {
 unsubscribe();
 ```
 
-Available events: `ready`, `auth_complete`, `user_changed`, `payment`, `payment_complete`, `popup_auth_result`, and `error`.
+Available events: `ready`, `auth_complete`, `user_changed`, `payment`, `payment_complete`, `age_verification_complete`, `popup_auth_result`, and `error`.
 
 ## Build
 

@@ -22,7 +22,7 @@ export interface HAppsUnityInputMap {
   popup_auth: { url: string; callbackOrigin?: string };
   set_fullscreen: { enabled: boolean };
   set_theater_mode: { enabled: boolean };
-  open_age_verification: { adultMode?: boolean };
+  open_age_verification: Record<string, never>;
 }
 
 export type HAppsUnityErrorMessage = {

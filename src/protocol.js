@@ -2,6 +2,7 @@ var ALLOWED_PLATFORM_MESSAGES = Object.freeze({
   platform_launch: true,
   auth_complete: true,
   payment_complete: true,
+  age_verification_complete: true,
   profile_updated: true,
 });
 
@@ -59,6 +60,10 @@ export function validatePlatformMessage(data) {
 
   if (data.type === "profile_updated" && typeof data.verified !== "boolean") {
     return "profile_updated verified must be boolean";
+  }
+
+  if (data.type === "age_verification_complete" && data.verified !== true) {
+    return "age_verification_complete verified must be true";
   }
 
   return null;

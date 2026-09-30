@@ -209,6 +209,13 @@ export function createHAppsClient(initialConfig) {
         break;
       }
 
+      case "age_verification_complete":
+        emitter.emit("age_verification_complete", {
+          type: "age_verification_complete",
+          verified: true,
+        });
+        break;
+
       case "profile_updated":
         if (!userData) return;
         userData = {
@@ -629,10 +636,9 @@ export function createHAppsClient(initialConfig) {
       postToPortal({ type: "set_theater_mode", enabled: !!enabled });
     },
 
-    openAgeVerification: function(payload) {
+    openAgeVerification: function() {
       postToPortal({
         type: "open_age_verification",
-        adultMode: !payload || payload.adultMode !== false,
       });
     },
 

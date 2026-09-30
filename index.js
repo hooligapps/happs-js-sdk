@@ -74,6 +74,7 @@
     platform_launch: true,
     auth_complete: true,
     payment_complete: true,
+    age_verification_complete: true,
     profile_updated: true
   });
   function isObject(value) {
@@ -117,6 +118,9 @@
     }
     if (data.type === "profile_updated" && typeof data.verified !== "boolean") {
       return "profile_updated verified must be boolean";
+    }
+    if (data.type === "age_verification_complete" && data.verified !== true) {
+      return "age_verification_complete verified must be true";
     }
     return null;
   }
@@ -338,6 +342,12 @@
           }
           break;
         }
+        case "age_verification_complete":
+          emitter.emit("age_verification_complete", {
+            type: "age_verification_complete",
+            verified: true
+          });
+          break;
         case "profile_updated":
           if (!userData) return;
           userData = {
@@ -688,10 +698,9 @@
       setTheaterMode: function(enabled) {
         postToPortal({ type: "set_theater_mode", enabled: !!enabled });
       },
-      openAgeVerification: function(payload) {
+      openAgeVerification: function() {
         postToPortal({
-          type: "open_age_verification",
-          adultMode: !payload || payload.adultMode !== false
+          type: "open_age_verification"
         });
       },
       destroy: function() {
@@ -757,6 +766,7 @@
       client2.on("user_changed", send),
       client2.on("payment", send),
       client2.on("payment_complete", send),
+      client2.on("age_verification_complete", send),
       client2.on("popup_auth_result", send),
       client2.on("error", function(error) {
         send({ type: "error", error });
@@ -926,7 +936,7 @@
           break;
         case "open_age_verification":
           run(function() {
-            client2.openAgeVerification({ adultMode: payload.adultMode !== false });
+            client2.openAgeVerification();
           });
           break;
         default:

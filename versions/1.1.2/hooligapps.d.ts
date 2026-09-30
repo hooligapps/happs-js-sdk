@@ -45,6 +45,10 @@ export interface HAppsPaymentResult {
 }
 
 export interface HAppsEventMap {
+  age_verification_complete: {
+    type: "age_verification_complete";
+    verified: true;
+  };
   ready: HAppsConnection;
   auth_complete: {
     type: "auth_complete";
@@ -118,7 +122,7 @@ export interface HAppsClient {
   openExternalUrl(url: string): void;
   setFullscreen(enabled: boolean): void;
   setTheaterMode(enabled: boolean): void;
-  openAgeVerification(payload?: { adultMode?: boolean }): void;
+  openAgeVerification(): void;
   destroy(): void;
 }
 
