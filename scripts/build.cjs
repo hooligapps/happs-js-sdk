@@ -82,10 +82,20 @@ async function main() {
     ["index.d.ts", "hooligapps.d.ts"],
     ["README.md", "README.md"],
   ]) {
-    fs.copyFileSync(
-      path.join(projectRoot, sourceName),
-      path.join(outputDirectory, outputName),
-    );
+    if (outputName === "hooligapps.js") {
+      const source = fs.readFileSync(path.join(projectRoot, sourceName), "utf8");
+      const result = esbuild.transformSync(source, {
+        minify: true,
+        target: common.target,
+        legalComments: common.legalComments,
+      });
+      fs.writeFileSync(path.join(outputDirectory, outputName), result.code);
+    } else {
+      fs.copyFileSync(
+        path.join(projectRoot, sourceName),
+        path.join(outputDirectory, outputName),
+      );
+    }
   }
 
   console.log(`Built HApps JS SDK ${version}`);

@@ -168,8 +168,9 @@ test("Unity defaults match the client and verified portal auth completes immedia
   assert.equal(messages[0].methodName, "OnMessage");
   assert.deepEqual(messages[0].message, {
     type: "auth_complete",
+    action: "login",
     userData: {
-      userId: "42",
+      id: "42",
       userName: "Player",
       verified: true,
     },
@@ -316,5 +317,80 @@ test("Unity receives one payment failure on timeout", async () => {
   );
   assert.equal(failures.length, 1);
   unity.destroy();
+  client.destroy();
+});
+
+
+test("OIDC popup regains focus on tab return and removes listeners on completion", async () => {
+  const { client, fakeWindow } = await createReadyClient();
+  const documentListeners = new Map();
+  fakeWindow.document = {
+    visibilityState: "visible",
+    documentElement: { clientWidth: 1000, clientHeight: 800 },
+    addEventListener(type, callback) { documentListeners.set(type, callback); },
+    removeEventListener(type, callback) {
+      if (documentListeners.get(type) === callback) documentListeners.delete(type);
+    },
+  };
+  fakeWindow.screenLeft = fakeWindow.screenTop = 0;
+  let focusCount = 0;
+  const popup = { closed: false, focus() { focusCount++; }, close() { this.closed = true; } };
+  fakeWindow.open = () => popup;
+  const result = client.openIdpAuthPopup(PORTAL_ORIGIN + "/idp/auth");
+  assert.equal(focusCount, 1);
+  fakeWindow.document.visibilityState = "hidden";
+  documentListeners.get("visibilitychange")();
+  assert.equal(focusCount, 1);
+  fakeWindow.document.visibilityState = "visible";
+  documentListeners.get("visibilitychange")();
+  assert.equal(focusCount, 2);
+  for (const callback of fakeWindow.listeners.get("focus")) callback();
+  assert.equal(focusCount, 3);
+  popup.focus = () => { throw new Error("Browser denied focus"); };
+  for (const callback of fakeWindow.listeners.get("focus")) callback();
+  for (const callback of fakeWindow.listeners.get("message")) {
+    callback({ origin: PORTAL_ORIGIN, source: popup, data: { type: "auth_done" } });
+  }
+  assert.deepEqual(await result, { flow: "cookie" });
+  assert.equal(fakeWindow.listeners.get("focus").size, 0);
+  assert.equal(documentListeners.size, 0);
+  client.destroy();
+});
+
+for (const action of ["sign_up", "linked", "login"]) {
+  test(`auth_complete forwards ${action} after SSO to listeners and Unity`, async () => {
+    const { client, fakeWindow } = await createReadyClient();
+    const messages = [];
+    const bridge = createUnityBridge(client, {
+      gameInstance: { SendMessage(_object, _method, message) { messages.push(JSON.parse(message)); } },
+    });
+    const completed = new Promise(resolve => client.once("auth_complete", resolve));
+    fakeWindow.dispatchPortal({
+      type: "auth_complete", action, token: "auth-test-token",
+      userData: { id: 42, verified: true },
+    });
+    const event = await completed;
+    assert.equal(event.action, action);
+    assert.deepEqual(messages[0], JSON.parse(JSON.stringify(event)));
+    bridge.destroy();
+    client.destroy();
+  });
+}
+
+test("auth_complete forwards action without a signature and rejects unknown actions", async () => {
+  const { client, fakeWindow } = await createReadyClient();
+  const events = [];
+  const errors = [];
+  client.on("auth_complete", event => events.push(event));
+  client.on("error", error => errors.push(error));
+  fakeWindow.dispatchPortal({ type: "auth_complete", action: "linked" });
+  fakeWindow.dispatchPortal({ type: "auth_complete", action: "unknown" });
+  fakeWindow.dispatchPortal({ type: "auth_complete" });
+  assert.deepEqual(events, [
+    { type: "auth_complete", action: "linked" },
+    { type: "auth_complete" },
+  ]);
+  assert.equal(errors[0].code, client.ErrorCodes.INVALID_PAYLOAD);
+  assert.equal(errors.length, 1);
   client.destroy();
 });

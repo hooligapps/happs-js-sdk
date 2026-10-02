@@ -1,3 +1,4 @@
+
 var ALLOWED_PLATFORM_MESSAGES = Object.freeze({
   platform_launch: true,
   auth_complete: true,
@@ -38,6 +39,9 @@ export function validatePlatformMessage(data) {
   }
 
   if (data.type === "auth_complete") {
+    if (data.action !== undefined && !["sign_up", "linked", "login"].includes(data.action)) {
+      return "auth_complete action is invalid";
+    }
     if (data.signature !== undefined && typeof data.signature !== "string") {
       return "auth_complete signature must be a string";
     }

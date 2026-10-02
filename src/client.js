@@ -107,7 +107,7 @@ export function createHAppsClient(initialConfig) {
     });
   }
 
-  async function loginWithPlatformSignature(signature, emitAuthComplete) {
+  async function loginWithPlatformSignature(signature, emitAuthComplete, action) {
     var generation = ++loginGeneration;
 
     for (var attempt = 1; attempt <= config.maxRetries; attempt += 1) {
@@ -150,6 +150,7 @@ export function createHAppsClient(initialConfig) {
         if (emitAuthComplete) {
           emitter.emit("auth_complete", {
             type: "auth_complete",
+            ...(action === undefined ? {} : { action: action }),
             userData: connection.user || undefined,
             signatureData: signatureData,
           });
@@ -202,9 +203,12 @@ export function createHAppsClient(initialConfig) {
         if (authUser) userData = authUser;
         var authSignature = extractSignature(data);
         if (authSignature) {
-          void loginWithPlatformSignature(authSignature, true);
+          void loginWithPlatformSignature(authSignature, true, data.action);
         } else {
-          emitter.emit("auth_complete", { type: "auth_complete" });
+          emitter.emit("auth_complete", {
+            type: "auth_complete",
+            ...(data.action === undefined ? {} : { action: data.action }),
+          });
         }
         break;
       }
@@ -448,6 +452,8 @@ export function createHAppsClient(initialConfig) {
         if (completed) return;
         completed = true;
         browserWindow.removeEventListener("message", onMessage, false);
+        browserWindow.removeEventListener("focus", focusPopup, false);
+        browserWindow.document.removeEventListener("visibilitychange", focusPopup, false);
         browserWindow.clearInterval(closedInterval);
         browserWindow.clearTimeout(timeoutId);
         try {
@@ -460,6 +466,13 @@ export function createHAppsClient(initialConfig) {
           authPopupData: result,
         });
         resolve(result);
+      }
+
+      function focusPopup() {
+        if (completed || browserWindow.document.visibilityState === "hidden") return;
+        try {
+          if (!popup.closed) popup.focus();
+        } catch (_) {}
       }
 
       function onMessage(event) {
@@ -479,6 +492,9 @@ export function createHAppsClient(initialConfig) {
       }
 
       browserWindow.addEventListener("message", onMessage, false);
+      browserWindow.addEventListener("focus", focusPopup, false);
+      browserWindow.document.addEventListener("visibilitychange", focusPopup, false);
+      focusPopup();
       closedInterval = browserWindow.setInterval(function() {
         try {
           if (popup.closed) finish({ flow: "cancelled" });

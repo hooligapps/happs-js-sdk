@@ -136,3 +136,16 @@ npm run build
 ```
 
 The build generates `index.js`, `dist/*`, and `versions/1.1.0/*`.
+
+### Authentication action
+
+The portal may include `action` in its `auth_complete` message. The SDK validates
+and forwards it to `auth_complete` listeners and the Unity bridge after SSO completes.
+The optional field uses the TypeScript union `AuthAction = "sign_up" | "linked" | "login"`:
+
+- `"sign_up"`: a new user was created.
+- `"linked"`: game progress was linked to an existing user.
+- `"login"`: an existing user signed in.
+
+Messages from older portals and cancelled auth flows may omit `action`.
+Unity portal auth for an already verified user returns `"login"`.

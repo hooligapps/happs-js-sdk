@@ -525,6 +525,8 @@
           if (completed) return;
           completed = true;
           browserWindow.removeEventListener("message", onMessage, false);
+          browserWindow.removeEventListener("focus", focusPopup, false);
+          browserWindow.document.removeEventListener("visibilitychange", focusPopup, false);
           browserWindow.clearInterval(closedInterval);
           browserWindow.clearTimeout(timeoutId);
           try {
@@ -539,6 +541,13 @@
           });
           resolve(result);
         }
+        function focusPopup() {
+          if (completed || browserWindow.document.visibilityState === "hidden") return;
+          try {
+            if (!popup.closed) popup.focus();
+          } catch (_) {
+          }
+        }
         function onMessage(event) {
           if (event.origin !== expectedOrigin || event.source !== popup) return;
           var data = event.data;
@@ -551,6 +560,9 @@
           }
         }
         browserWindow.addEventListener("message", onMessage, false);
+        browserWindow.addEventListener("focus", focusPopup, false);
+        browserWindow.document.addEventListener("visibilitychange", focusPopup, false);
+        focusPopup();
         closedInterval = browserWindow.setInterval(function() {
           try {
             if (popup.closed) finish({ flow: "cancelled" });

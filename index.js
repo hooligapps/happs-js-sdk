@@ -98,6 +98,9 @@
       }
     }
     if (data.type === "auth_complete") {
+      if (data.action !== void 0 && !["sign_up", "linked", "login"].includes(data.action)) {
+        return "auth_complete action is invalid";
+      }
       if (data.signature !== void 0 && typeof data.signature !== "string") {
         return "auth_complete signature must be a string";
       }
@@ -250,7 +253,7 @@
         }
       });
     }
-    async function loginWithPlatformSignature(signature, emitAuthComplete) {
+    async function loginWithPlatformSignature(signature, emitAuthComplete, action) {
       var generation = ++loginGeneration;
       for (var attempt = 1; attempt <= config.maxRetries; attempt += 1) {
         try {
@@ -288,6 +291,7 @@
           if (emitAuthComplete) {
             emitter.emit("auth_complete", {
               type: "auth_complete",
+              ...action === void 0 ? {} : { action },
               userData: connection.user || void 0,
               signatureData
             });
@@ -336,9 +340,12 @@
           if (authUser) userData = authUser;
           var authSignature = extractSignature(data);
           if (authSignature) {
-            void loginWithPlatformSignature(authSignature, true);
+            void loginWithPlatformSignature(authSignature, true, data.action);
           } else {
-            emitter.emit("auth_complete", { type: "auth_complete" });
+            emitter.emit("auth_complete", {
+              type: "auth_complete",
+              ...data.action === void 0 ? {} : { action: data.action }
+            });
           }
           break;
         }
@@ -538,6 +545,8 @@
           if (completed) return;
           completed = true;
           browserWindow.removeEventListener("message", onMessage, false);
+          browserWindow.removeEventListener("focus", focusPopup, false);
+          browserWindow.document.removeEventListener("visibilitychange", focusPopup, false);
           browserWindow.clearInterval(closedInterval);
           browserWindow.clearTimeout(timeoutId);
           try {
@@ -552,6 +561,13 @@
           });
           resolve(result);
         }
+        function focusPopup() {
+          if (completed || browserWindow.document.visibilityState === "hidden") return;
+          try {
+            if (!popup.closed) popup.focus();
+          } catch (_) {
+          }
+        }
         function onMessage(event) {
           if (event.origin !== expectedOrigin || event.source !== popup) return;
           var data = event.data;
@@ -564,6 +580,9 @@
           }
         }
         browserWindow.addEventListener("message", onMessage, false);
+        browserWindow.addEventListener("focus", focusPopup, false);
+        browserWindow.document.addEventListener("visibilitychange", focusPopup, false);
+        focusPopup();
         closedInterval = browserWindow.setInterval(function() {
           try {
             if (popup.closed) finish({ flow: "cancelled" });
@@ -829,6 +848,7 @@
         var signature = client2.getSignature();
         send({
           type: "auth_complete",
+          action: "login",
           userData: user,
           signatureData: signature ? { signature } : null
         });

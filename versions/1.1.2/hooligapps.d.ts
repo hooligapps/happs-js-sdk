@@ -1,3 +1,5 @@
+export type AuthAction = "sign_up" | "linked" | "login";
+
 export interface HAppsUser {
   id: string;
   userId?: string;
@@ -52,6 +54,7 @@ export interface HAppsEventMap {
   ready: HAppsConnection;
   auth_complete: {
     type: "auth_complete";
+    action?: AuthAction;
     userData?: HAppsUser;
     signatureData?: HAppsSignatureData | null;
   };

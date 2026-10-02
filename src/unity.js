@@ -94,6 +94,7 @@ export function createUnityBridge(client, bridgeConfig) {
       var signature = client.getSignature();
       send({
         type: "auth_complete",
+        action: "login",
         userData: user,
         signatureData: signature ? { signature: signature } : null,
       });

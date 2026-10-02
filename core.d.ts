@@ -1,4 +1,5 @@
 export type {
+  AuthAction,
   HAppsAuthPopupResult,
   HAppsClient,
   HAppsConnection,
