@@ -66,8 +66,8 @@ export function validatePlatformMessage(data) {
     return "profile_updated verified must be boolean";
   }
 
-  if (data.type === "age_verification_complete" && data.verified !== true) {
-    return "age_verification_complete verified must be true";
+  if (data.type === "age_verification_complete" && data.confirmed !== true) {
+    return "age_verification_complete confirmed must be true";
   }
 
   return null;

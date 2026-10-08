@@ -1,4 +1,4 @@
-# HApps JS SDK 1.1.0
+# HApps JS SDK 1.1.2
 
 Browser SDK for Hooli Games portal integration. Supports JavaScript, TypeScript, and Unity WebGL.
 
@@ -37,7 +37,7 @@ await client.connect();
 ## CDN
 
 ```html
-<script src="https://cdn.hooli.games/sdk/1.1.0/hooligapps.js"></script>
+<script src="https://cdn.hooli.games/sdk/1.1.2/hooligapps.js"></script>
 <script>
   HApps.init({
     platformOrigin: "https://hooli.games",
@@ -108,8 +108,8 @@ await HApps.openPayment(orderId);
 HApps.setFullscreen(true);
 HApps.setTheaterMode(true);
 // Subscribe before opening the confirmation dialog.
-HApps.on("age_verification_complete", ({ verified }) => {
-  if (verified) {
+HApps.on("age_verification_complete", ({ confirmed }) => {
+  if (confirmed) {
     // The player confirmed 18+ in the portal dialog.
   }
 });

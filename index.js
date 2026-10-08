@@ -122,8 +122,8 @@
     if (data.type === "profile_updated" && typeof data.verified !== "boolean") {
       return "profile_updated verified must be boolean";
     }
-    if (data.type === "age_verification_complete" && data.verified !== true) {
-      return "age_verification_complete verified must be true";
+    if (data.type === "age_verification_complete" && data.confirmed !== true) {
+      return "age_verification_complete confirmed must be true";
     }
     return null;
   }
@@ -337,7 +337,9 @@
           break;
         case "auth_complete": {
           var authUser = extractUser(data);
-          if (authUser) userData = authUser;
+          if (authUser) {
+            userData = authUser;
+          }
           var authSignature = extractSignature(data);
           if (authSignature) {
             void loginWithPlatformSignature(authSignature, true, data.action);
@@ -352,7 +354,7 @@
         case "age_verification_complete":
           emitter.emit("age_verification_complete", {
             type: "age_verification_complete",
-            verified: true
+            confirmed: true
           });
           break;
         case "profile_updated":

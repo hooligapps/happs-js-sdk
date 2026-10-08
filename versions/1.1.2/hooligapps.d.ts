@@ -49,7 +49,7 @@ export interface HAppsPaymentResult {
 export interface HAppsEventMap {
   age_verification_complete: {
     type: "age_verification_complete";
-    verified: true;
+    confirmed: true;
   };
   ready: HAppsConnection;
   auth_complete: {

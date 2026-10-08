@@ -200,7 +200,9 @@ export function createHAppsClient(initialConfig) {
 
       case "auth_complete": {
         var authUser = extractUser(data);
-        if (authUser) userData = authUser;
+        if (authUser) {
+          userData = authUser;
+        }
         var authSignature = extractSignature(data);
         if (authSignature) {
           void loginWithPlatformSignature(authSignature, true, data.action);
@@ -216,7 +218,7 @@ export function createHAppsClient(initialConfig) {
       case "age_verification_complete":
         emitter.emit("age_verification_complete", {
           type: "age_verification_complete",
-          verified: true,
+          confirmed: true,
         });
         break;
 
