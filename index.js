@@ -81,7 +81,7 @@
     return !!value && typeof value === "object" && !Array.isArray(value);
   }
   function isValidUserData(value) {
-    return isObject(value) && (typeof value.id === "string" || typeof value.id === "number") && (value.userId === void 0 || typeof value.userId === "string" || typeof value.userId === "number") && typeof value.verified === "boolean";
+    return isObject(value) && (typeof value.id === "string" || typeof value.id === "number") && (value.userId === void 0 || typeof value.userId === "string" || typeof value.userId === "number") && typeof value.verified === "boolean" && (value.ageConfirmed === void 0 || typeof value.ageConfirmed === "boolean");
   }
   function validatePlatformMessage(data) {
     if (!isObject(data)) return "Message is not an object";
@@ -122,6 +122,9 @@
     if (data.type === "profile_updated" && typeof data.verified !== "boolean") {
       return "profile_updated verified must be boolean";
     }
+    if (data.type === "profile_updated" && data.ageConfirmed !== void 0 && typeof data.ageConfirmed !== "boolean") {
+      return "profile_updated ageConfirmed must be boolean";
+    }
     if (data.type === "age_verification_complete" && data.confirmed !== true) {
       return "age_verification_complete confirmed must be true";
     }
@@ -138,7 +141,8 @@
       id: String(data.userData.id),
       userId: data.userData.userId === void 0 ? void 0 : String(data.userData.userId),
       userName: typeof data.userData.userName === "string" ? data.userData.userName : void 0,
-      verified: data.userData.verified
+      verified: data.userData.verified,
+      ...data.userData.ageConfirmed === void 0 ? {} : { ageConfirmed: data.userData.ageConfirmed }
     };
   }
 
@@ -321,6 +325,7 @@
       }
     }
     function handlePlatformMessage(data) {
+      var _a, _b;
       log("Portal event", data && data.type);
       var validationError = validatePlatformMessage(data);
       if (validationError) {
@@ -352,6 +357,7 @@
           break;
         }
         case "age_verification_complete":
+          if (userData) userData = { ...userData, ageConfirmed: true };
           emitter.emit("age_verification_complete", {
             type: "age_verification_complete",
             confirmed: true
@@ -363,7 +369,8 @@
             id: userData.id,
             userId: userData.userId,
             userName: userData.userName,
-            verified: data.verified
+            verified: data.verified,
+            ...((_a = data.ageConfirmed) != null ? _a : userData.ageConfirmed) === void 0 ? {} : { ageConfirmed: (_b = data.ageConfirmed) != null ? _b : userData.ageConfirmed }
           };
           emitter.emit("user_changed", {
             type: "user_changed",
@@ -624,7 +631,8 @@
           id: userData.id,
           userId: userData.userId,
           userName: userData.userName,
-          verified: userData.verified
+          verified: userData.verified,
+          ...userData.ageConfirmed === void 0 ? {} : { ageConfirmed: userData.ageConfirmed }
         } : null;
       },
       getSignature: function() {

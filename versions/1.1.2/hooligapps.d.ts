@@ -5,6 +5,7 @@ export interface HAppsUser {
   userId?: string;
   userName?: string;
   verified: boolean;
+  ageConfirmed?: boolean;
 }
 
 export interface HAppsConnection {

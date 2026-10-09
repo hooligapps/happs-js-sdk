@@ -216,6 +216,7 @@ export function createHAppsClient(initialConfig) {
       }
 
       case "age_verification_complete":
+        if (userData) userData = { ...userData, ageConfirmed: true };
         emitter.emit("age_verification_complete", {
           type: "age_verification_complete",
           confirmed: true,
@@ -229,6 +230,7 @@ export function createHAppsClient(initialConfig) {
           userId: userData.userId,
           userName: userData.userName,
           verified: data.verified,
+          ...((data.ageConfirmed ?? userData.ageConfirmed) === undefined ? {} : { ageConfirmed: data.ageConfirmed ?? userData.ageConfirmed }),
         };
         emitter.emit("user_changed", {
           type: "user_changed",
@@ -544,6 +546,7 @@ export function createHAppsClient(initialConfig) {
             userId: userData.userId,
             userName: userData.userName,
             verified: userData.verified,
+            ...(userData.ageConfirmed === undefined ? {} : { ageConfirmed: userData.ageConfirmed }),
           }
         : null;
     },

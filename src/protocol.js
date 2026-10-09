@@ -18,7 +18,8 @@ function isValidUserData(value) {
     (value.userId === undefined ||
       typeof value.userId === "string" ||
       typeof value.userId === "number") &&
-    typeof value.verified === "boolean"
+    typeof value.verified === "boolean" &&
+    (value.ageConfirmed === undefined || typeof value.ageConfirmed === "boolean")
   );
 }
 
@@ -66,6 +67,10 @@ export function validatePlatformMessage(data) {
     return "profile_updated verified must be boolean";
   }
 
+  if (data.type === "profile_updated" && data.ageConfirmed !== undefined && typeof data.ageConfirmed !== "boolean") {
+    return "profile_updated ageConfirmed must be boolean";
+  }
+
   if (data.type === "age_verification_complete" && data.confirmed !== true) {
     return "age_verification_complete confirmed must be true";
   }
@@ -92,5 +97,6 @@ export function extractUser(data) {
         ? data.userData.userName
         : undefined,
     verified: data.userData.verified,
+    ...(data.userData.ageConfirmed === undefined ? {} : { ageConfirmed: data.userData.ageConfirmed }),
   };
 }
