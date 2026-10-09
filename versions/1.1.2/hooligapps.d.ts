@@ -127,6 +127,7 @@ export interface HAppsClient {
   setFullscreen(enabled: boolean): void;
   setTheaterMode(enabled: boolean): void;
   openAgeVerification(): void;
+  gameLoaded(): void;
   destroy(): void;
 }
 

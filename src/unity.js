@@ -209,6 +209,11 @@ export function createUnityBridge(client, bridgeConfig) {
           client.setTheaterMode(!!payload.enabled);
         });
         break;
+      case "game_loaded":
+        run(function() {
+          client.gameLoaded();
+        });
+        break;
       case "open_age_verification":
         run(function() {
           client.openAgeVerification();

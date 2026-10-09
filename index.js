@@ -487,6 +487,7 @@
           "popup_auth",
           "portal_auth",
           "open_age_verification",
+          "game_loaded",
           "set_fullscreen",
           "set_theater_mode"
         ]
@@ -732,6 +733,9 @@
           type: "open_age_verification"
         });
       },
+      gameLoaded: function() {
+        postToPortal({ type: "game_loaded" });
+      },
       destroy: function() {
         loginGeneration += 1;
         if (transport) transport.destroy();
@@ -962,6 +966,11 @@
         case "set_theater_mode":
           run(function() {
             client2.setTheaterMode(!!payload.enabled);
+          });
+          break;
+        case "game_loaded":
+          run(function() {
+            client2.gameLoaded();
           });
           break;
         case "open_age_verification":

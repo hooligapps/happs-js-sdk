@@ -356,6 +356,7 @@ export function createHAppsClient(initialConfig) {
         "popup_auth",
         "portal_auth",
         "open_age_verification",
+        "game_loaded",
         "set_fullscreen",
         "set_theater_mode",
       ],
@@ -661,6 +662,10 @@ export function createHAppsClient(initialConfig) {
       postToPortal({
         type: "open_age_verification",
       });
+    },
+
+    gameLoaded: function() {
+      postToPortal({ type: "game_loaded" });
     },
 
     destroy: function() {
