@@ -40,7 +40,7 @@ export function validatePlatformMessage(data) {
   }
 
   if (data.type === "auth_complete") {
-    if (data.action !== undefined && !["sign_up", "linked", "login"].includes(data.action)) {
+    if (data.action !== undefined && !["sign_up", "linked", "login", "cancel"].includes(data.action)) {
       return "auth_complete action is invalid";
     }
     if (data.signature !== undefined && typeof data.signature !== "string") {

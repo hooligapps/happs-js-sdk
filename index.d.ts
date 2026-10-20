@@ -1,7 +1,8 @@
-export type AuthAction = "sign_up" | "linked" | "login";
+export type AuthAction = "sign_up" | "linked" | "login" | "cancel";
 
 export interface HAppsUser {
   id: string;
+  /** Player identifier inside the game, when bound. */
   userId?: string;
   userName?: string;
   verified: boolean;

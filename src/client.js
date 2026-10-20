@@ -7,7 +7,7 @@ import {
 } from "./protocol.js";
 import { createPortalTransport } from "./portal-transport.js";
 
-export const SDK_VERSION = "1.1.2";
+export const SDK_VERSION = "1.2.0";
 
 var DEFAULTS = Object.freeze({
   ssoLoginUrl: "/api/sign",
@@ -209,7 +209,8 @@ export function createHAppsClient(initialConfig) {
         } else {
           emitter.emit("auth_complete", {
             type: "auth_complete",
-            ...(data.action === undefined ? {} : { action: data.action }),
+            action: data.action === undefined ? "cancel" : data.action,
+            ...(userData ? { userData: HApps.getUser() } : {}),
           });
         }
         break;

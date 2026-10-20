@@ -1,4 +1,4 @@
-# HApps JS SDK 1.1.2
+# HApps JS SDK 1.2.0
 
 Browser SDK for Hooli Games portal integration. Supports JavaScript, TypeScript, and Unity WebGL.
 
@@ -37,7 +37,7 @@ await client.connect();
 ## CDN
 
 ```html
-<script src="https://cdn.hooli.games/sdk/1.1.2/hooligapps.js"></script>
+<script src="https://cdn.hooli.games/sdk/1.2.0/hooligapps.js"></script>
 <script>
   HApps.init({
     platformOrigin: "https://hooli.games",
@@ -135,7 +135,7 @@ Available events: `ready`, `auth_complete`, `user_changed`, `payment`, `payment_
 npm run build
 ```
 
-The build generates `index.js`, `dist/*`, and `versions/1.1.0/*`.
+The build generates `index.js`, `dist/*`, and `versions/1.2.0/*`.
 
 ### Authentication action
 
@@ -149,3 +149,34 @@ The optional field uses the TypeScript union `AuthAction = "sign_up" | "linked" 
 
 Messages from older portals and cancelled auth flows may omit `action`.
 Unity portal auth for an already verified user returns `"login"`.
+
+## Identity fields
+
+`portalId` is the shared visitor UUID from the portal users table. `userId` is always the game user identifier (`GameLink.uid`). `linkId` is the GameLink UUID; in browser SDK user data this is `id`, and in launch tokens it is `sub`. `accId` identifies a registered portal account. The portal does not send its shared visitor UUID in the game launch token.
+
+Browser SDK 1.2.0 uses `getUser().userId` for the game identifier. The portal preserves passion-industry's old `userId = id` exception only for SDKs below 1.2.0 or without a version. Node/Python binding and payment methods use userId/user_id.
+
+## Publish browser SDK to CDN
+
+Build and publish from this repository:
+
+```bash
+npm run build
+npm run deploy:cdn -- --version 1.2.0 --dry-run
+npm run deploy:cdn -- --version 1.2.0
+```
+
+The script uploads `versions/<version>/*` to `sdk/<version>/*`. Omitting
+`--version` uploads all files under `versions`. Existing unversioned CDN aliases
+are not changed. Versioned files retain the one-year immutable cache policy;
+publish a new version when changing a released SDK.
+
+Supply `S3_ENDPOINT`, `S3_BUCKET`, `S3_KEY_ID`, and `S3_APPLICATION_KEY` through
+the environment or a local, ignored `.env` in this repository. `S3_REGION` is
+optional and defaults to `eu-central-003`. Do not commit credentials.
+`--dry-run` lists planned object keys without reading `.env` or contacting S3.
+Use `--sdk-dir <directory>` or `--sdk-prefix <prefix>` to override the source
+and destination prefix. Publishing uses development dependencies, so install
+with `npm install` rather than `--omit=dev`.
+
+Cancelled portal authentication emits `{ type: "auth_complete", action: "cancel" }` with the current profile in `userData` when available and without `signatureData`. The current SDK profile is preserved. A tokenless response without an action is treated as cancellation.

@@ -1,13 +1,14 @@
 {
   "name": "happs-js-sdk",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Framework-agnostic browser SDK for Hooli Games portal integrations",
   "scripts": {
     "build": "node scripts/build.cjs",
     "prepare": "npm run build",
     "typecheck": "tsc --noEmit --strict --skipLibCheck --lib ES2020,DOM index.d.ts core.d.ts unity.d.ts",
     "test": "npm run build && node --test test/*.test.cjs",
-    "validate": "npm run typecheck && npm test"
+    "validate": "npm run typecheck && npm test",
+    "deploy:cdn": "node scripts/deploy-sdk-cdn.cjs"
   },
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
@@ -56,6 +57,8 @@
   "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.25.9",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@aws-sdk/client-s3": "3.1014.0",
+    "dotenv": "^17.2.3"
   }
 }

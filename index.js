@@ -98,7 +98,7 @@
       }
     }
     if (data.type === "auth_complete") {
-      if (data.action !== void 0 && !["sign_up", "linked", "login"].includes(data.action)) {
+      if (data.action !== void 0 && !["sign_up", "linked", "login", "cancel"].includes(data.action)) {
         return "auth_complete action is invalid";
       }
       if (data.signature !== void 0 && typeof data.signature !== "string") {
@@ -167,7 +167,7 @@
   }
 
   // src/client.js
-  var SDK_VERSION = "1.1.2";
+  var SDK_VERSION = "1.2.0";
   var DEFAULTS = Object.freeze({
     ssoLoginUrl: "/api/sign",
     isPortal: true,
@@ -351,7 +351,8 @@
           } else {
             emitter.emit("auth_complete", {
               type: "auth_complete",
-              ...data.action === void 0 ? {} : { action: data.action }
+              action: data.action === void 0 ? "cancel" : data.action,
+              ...userData ? { userData: HApps.getUser() } : {}
             });
           }
           break;

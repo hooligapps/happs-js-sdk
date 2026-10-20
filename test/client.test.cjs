@@ -384,11 +384,13 @@ test("auth_complete forwards action without a signature and rejects unknown acti
   client.on("auth_complete", event => events.push(event));
   client.on("error", error => errors.push(error));
   fakeWindow.dispatchPortal({ type: "auth_complete", action: "linked" });
+  fakeWindow.dispatchPortal({ type: "auth_complete", action: "cancel" });
   fakeWindow.dispatchPortal({ type: "auth_complete", action: "unknown" });
   fakeWindow.dispatchPortal({ type: "auth_complete" });
   assert.deepEqual(events, [
-    { type: "auth_complete", action: "linked" },
-    { type: "auth_complete" },
+    { type: "auth_complete", action: "linked", userData: client.getUser() },
+    { type: "auth_complete", action: "cancel", userData: client.getUser() },
+    { type: "auth_complete", action: "cancel", userData: client.getUser() },
   ]);
   assert.equal(errors[0].code, client.ErrorCodes.INVALID_PAYLOAD);
   assert.equal(errors.length, 1);
