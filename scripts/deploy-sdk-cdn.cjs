@@ -125,8 +125,13 @@ async function main() {
   require("dotenv").config({ path: path.resolve(__dirname, "../.env"), quiet: true });
   const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
   const { S3_ENDPOINT, S3_BUCKET: bucket, S3_KEY_ID, S3_APPLICATION_KEY, S3_REGION } = process.env;
-  if (!S3_ENDPOINT || !bucket || !S3_KEY_ID || !S3_APPLICATION_KEY) {
-    throw new Error("Required: S3_ENDPOINT, S3_BUCKET, S3_KEY_ID, S3_APPLICATION_KEY");
+  const missing = Object.entries({ S3_ENDPOINT, S3_BUCKET: bucket, S3_KEY_ID, S3_APPLICATION_KEY })
+    .filter(([, value]) => !value?.trim())
+    .map(([name]) => name);
+  if (missing.length) {
+    console.error("[deploy-sdk-cdn] missing required variables:", missing.join(", "));
+    process.exitCode = 1;
+    return;
   }
   const s3 = new S3Client({
     endpoint: S3_ENDPOINT,
@@ -154,5 +159,12 @@ async function main() {
 
 main().catch((error) => {
   console.error("[deploy-sdk-cdn] failed:", error.name || "Error");
+  const code = error.code || error.cause?.code;
+  if (typeof code === "string" && /^[A-Za-z0-9_]+$/.test(code)) {
+    console.error("[deploy-sdk-cdn] error code:", code);
+  }
+  if (Number.isInteger(error.$metadata?.httpStatusCode)) {
+    console.error("[deploy-sdk-cdn] HTTP status:", error.$metadata.httpStatusCode);
+  }
   process.exitCode = 1;
 });

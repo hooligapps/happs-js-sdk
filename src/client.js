@@ -42,6 +42,7 @@ export function createHAppsClient(initialConfig) {
   var activePayment = null;
   var activeAuthPopup = null;
   var cancelAuthPopup = null;
+  var cancelAgePopup = null;
   var emitter = createEmitter();
 
   function log() {
@@ -229,7 +230,8 @@ export function createHAppsClient(initialConfig) {
         userData = {
           id: userData.id,
           userId: userData.userId,
-          userName: userData.userName,
+          userName: data.userName === undefined ? userData.userName : (data.userName || undefined),
+          ...((data.locale ?? userData.locale) === undefined ? {} : { locale: data.locale ?? userData.locale }),
           verified: data.verified,
           ...((data.ageConfirmed ?? userData.ageConfirmed) === undefined ? {} : { ageConfirmed: data.ageConfirmed ?? userData.ageConfirmed }),
         };
@@ -515,6 +517,55 @@ export function createHAppsClient(initialConfig) {
     });
   }
 
+  function openAgeVerificationPopup(url, callbackOrigin) {
+    try { requireInitialized(); } catch (error) { return Promise.reject(error); }
+    if (cancelAgePopup) return Promise.reject(makeError(ErrorCodes.OPERATION_IN_PROGRESS, "Age verification popup is already open"));
+    var popupUrl;
+    var expectedOrigin;
+    try {
+      popupUrl = new URL(url, browserWindow.location.href);
+      var entryUrl = new URL(browserWindow.location.href);
+      if (!popupUrl.searchParams.has("utm_campaign") && entryUrl.searchParams.has("utm_campaign")) {
+        popupUrl.searchParams.set("utm_campaign", entryUrl.searchParams.get("utm_campaign"));
+      }
+      var callbackUrl = new URL(callbackOrigin || popupUrl.origin, browserWindow.location.href);
+      if (!["https:", "http:"].includes(popupUrl.protocol) || !["https:", "http:"].includes(callbackUrl.protocol) || popupUrl.username || popupUrl.password) throw new Error("Invalid URL");
+      expectedOrigin = callbackUrl.origin;
+    } catch (_) { return Promise.reject(makeError(ErrorCodes.INVALID_CONFIG, "Invalid age verification popup URL")); }
+    var popup = browserWindow.open(popupUrl.toString(), "hooligapps_age_popup", "width=480,height=720,resizable=yes,scrollbars=yes");
+    if (!popup) return Promise.reject(makeError(ErrorCodes.INVALID_PAYLOAD, "Allow popups to verify your age"));
+    return new Promise(function(resolve, reject) {
+      var completed = false;
+      var closedInterval;
+      var timeoutId;
+      function finish(result, error) {
+        if (completed) return;
+        completed = true;
+        browserWindow.removeEventListener("message", onMessage, false);
+        browserWindow.clearInterval(closedInterval);
+        browserWindow.clearTimeout(timeoutId);
+        try { popup.close(); } catch (_) {}
+        cancelAgePopup = null;
+        if (error) reject(error); else resolve(result);
+      }
+      function onMessage(event) {
+        if (event.origin !== expectedOrigin || event.source !== popup) return;
+        var data = event.data;
+        if (!data || data.type !== "age_verification_done") return;
+        if (data.confirmed === true) finish({ confirmed: true });
+        else if (data.confirmed === false && ["cancelled", "failed", "pending"].includes(data.reason)) finish({ confirmed: false, reason: data.reason });
+      }
+      browserWindow.addEventListener("message", onMessage, false);
+      closedInterval = browserWindow.setInterval(function() {
+        if (popup.closed) finish({ confirmed: false, reason: "cancelled" });
+      }, 500);
+      timeoutId = browserWindow.setTimeout(function() {
+        finish(null, makeError(ErrorCodes.OPERATION_TIMEOUT, "Age verification timed out"));
+      }, 900000);
+      cancelAgePopup = function() { finish({ confirmed: false, reason: "cancelled" }); };
+    });
+  }
+
   var HApps = {
     ErrorCodes: ErrorCodes,
 
@@ -548,6 +599,7 @@ export function createHAppsClient(initialConfig) {
             userId: userData.userId,
             userName: userData.userName,
             verified: userData.verified,
+            ...(userData.locale === undefined ? {} : { locale: userData.locale }),
             ...(userData.ageConfirmed === undefined ? {} : { ageConfirmed: userData.ageConfirmed }),
           }
         : null;
@@ -591,6 +643,7 @@ export function createHAppsClient(initialConfig) {
     },
 
     openIdpAuthPopup: openIdpAuthPopup,
+    openAgeVerificationPopup: openAgeVerificationPopup,
 
     openPayment: async function(orderId) {
       requireInitialized();
@@ -678,6 +731,7 @@ export function createHAppsClient(initialConfig) {
         readyTimeoutId = null;
       }
       if (cancelAuthPopup) cancelAuthPopup();
+      if (cancelAgePopup) cancelAgePopup();
       cancelAuthPopup = null;
 
       if (activePayment) {

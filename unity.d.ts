@@ -19,6 +19,7 @@ export interface HAppsUnityInputMap {
   get_profile: Record<string, never>;
   open_payment: { orderId: string };
   open_external_url: { url: string };
+  popup_age_verification: { url: string; callbackOrigin?: string };
   popup_auth: { url: string; callbackOrigin?: string };
   set_fullscreen: { enabled: boolean };
   set_theater_mode: { enabled: boolean };

@@ -1,3 +1,7 @@
+export type HAppsAgeVerificationResult =
+  | { confirmed: true }
+  | { confirmed: false; reason: "cancelled" | "failed" | "pending" };
+
 export type AuthAction = "sign_up" | "linked" | "login" | "cancel";
 
 export interface HAppsUser {
@@ -7,6 +11,8 @@ export interface HAppsUser {
   userName?: string;
   verified: boolean;
   ageConfirmed?: boolean;
+  /** Portal language, e.g. en or pt-BR, when provided. */
+  locale?: string;
 }
 
 export interface HAppsConnection {
@@ -123,6 +129,7 @@ export interface HAppsClient {
     url: string,
     callbackOrigin?: string,
   ): Promise<HAppsAuthPopupResult>;
+  openAgeVerificationPopup(url: string, callbackOrigin?: string): Promise<HAppsAgeVerificationResult>;
   openPayment(orderId: string): Promise<HAppsPaymentResult>;
   openExternalUrl(url: string): void;
   setFullscreen(enabled: boolean): void;

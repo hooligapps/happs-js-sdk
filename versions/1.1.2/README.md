@@ -151,3 +151,5 @@ Messages from older portals and cancelled auth flows may omit `action`.
 Unity portal auth for an already verified user returns `"login"`.
 
 When portal authentication is cancelled without a new token, `auth_complete` includes the current user in `userData` if a profile is available, including a guest profile. Cancellation preserves the current session and does not indicate a successful login.
+
+Tokenless `auth_complete` events are logged to the browser console with their current `userData` when available. Tokens and signatures are not logged.

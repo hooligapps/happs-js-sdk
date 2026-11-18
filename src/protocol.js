@@ -19,6 +19,7 @@ function isValidUserData(value) {
       typeof value.userId === "string" ||
       typeof value.userId === "number") &&
     typeof value.verified === "boolean" &&
+    (value.locale === undefined || typeof value.locale === "string") &&
     (value.ageConfirmed === undefined || typeof value.ageConfirmed === "boolean")
   );
 }
@@ -67,6 +68,14 @@ export function validatePlatformMessage(data) {
     return "profile_updated verified must be boolean";
   }
 
+  if (data.type === "profile_updated" && data.locale !== undefined && (typeof data.locale !== "string" || !data.locale.trim())) {
+    return "profile_updated locale must be a non-empty string";
+  }
+
+  if (data.type === "profile_updated" && data.userName !== undefined && data.userName !== null && typeof data.userName !== "string") {
+    return "profile_updated userName must be a string or null";
+  }
+
   if (data.type === "profile_updated" && data.ageConfirmed !== undefined && typeof data.ageConfirmed !== "boolean") {
     return "profile_updated ageConfirmed must be boolean";
   }
@@ -97,6 +106,7 @@ export function extractUser(data) {
         ? data.userData.userName
         : undefined,
     verified: data.userData.verified,
+    ...(data.userData.locale === undefined ? {} : { locale: data.userData.locale }),
     ...(data.userData.ageConfirmed === undefined ? {} : { ageConfirmed: data.userData.ageConfirmed }),
   };
 }

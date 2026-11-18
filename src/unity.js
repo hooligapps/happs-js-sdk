@@ -214,6 +214,11 @@ export function createUnityBridge(client, bridgeConfig) {
           client.gameLoaded();
         });
         break;
+      case "popup_age_verification":
+        client.openAgeVerificationPopup(payload.url, payload.callbackOrigin).then(function(result) {
+          send({ type: "popup_age_verification_result", ...result });
+        }).catch(sendError);
+        break;
       case "open_age_verification":
         run(function() {
           client.openAgeVerification();

@@ -81,7 +81,7 @@
     return !!value && typeof value === "object" && !Array.isArray(value);
   }
   function isValidUserData(value) {
-    return isObject(value) && (typeof value.id === "string" || typeof value.id === "number") && (value.userId === void 0 || typeof value.userId === "string" || typeof value.userId === "number") && typeof value.verified === "boolean" && (value.ageConfirmed === void 0 || typeof value.ageConfirmed === "boolean");
+    return isObject(value) && (typeof value.id === "string" || typeof value.id === "number") && (value.userId === void 0 || typeof value.userId === "string" || typeof value.userId === "number") && typeof value.verified === "boolean" && (value.locale === void 0 || typeof value.locale === "string") && (value.ageConfirmed === void 0 || typeof value.ageConfirmed === "boolean");
   }
   function validatePlatformMessage(data) {
     if (!isObject(data)) return "Message is not an object";
@@ -122,6 +122,12 @@
     if (data.type === "profile_updated" && typeof data.verified !== "boolean") {
       return "profile_updated verified must be boolean";
     }
+    if (data.type === "profile_updated" && data.locale !== void 0 && (typeof data.locale !== "string" || !data.locale.trim())) {
+      return "profile_updated locale must be a non-empty string";
+    }
+    if (data.type === "profile_updated" && data.userName !== void 0 && data.userName !== null && typeof data.userName !== "string") {
+      return "profile_updated userName must be a string or null";
+    }
     if (data.type === "profile_updated" && data.ageConfirmed !== void 0 && typeof data.ageConfirmed !== "boolean") {
       return "profile_updated ageConfirmed must be boolean";
     }
@@ -142,6 +148,7 @@
       userId: data.userData.userId === void 0 ? void 0 : String(data.userData.userId),
       userName: typeof data.userData.userName === "string" ? data.userData.userName : void 0,
       verified: data.userData.verified,
+      ...data.userData.locale === void 0 ? {} : { locale: data.userData.locale },
       ...data.userData.ageConfirmed === void 0 ? {} : { ageConfirmed: data.userData.ageConfirmed }
     };
   }
@@ -199,6 +206,7 @@
     var activePayment = null;
     var activeAuthPopup = null;
     var cancelAuthPopup = null;
+    var cancelAgePopup = null;
     var emitter = createEmitter();
     function log() {
       if (!config || !config.debug || !globalThis.console) return;
@@ -325,7 +333,7 @@
       }
     }
     function handlePlatformMessage(data) {
-      var _a, _b;
+      var _a, _b, _c, _d;
       log("Portal event", data && data.type);
       var validationError = validatePlatformMessage(data);
       if (validationError) {
@@ -369,9 +377,10 @@
           userData = {
             id: userData.id,
             userId: userData.userId,
-            userName: userData.userName,
+            userName: data.userName === void 0 ? userData.userName : data.userName || void 0,
+            ...((_a = data.locale) != null ? _a : userData.locale) === void 0 ? {} : { locale: (_b = data.locale) != null ? _b : userData.locale },
             verified: data.verified,
-            ...((_a = data.ageConfirmed) != null ? _a : userData.ageConfirmed) === void 0 ? {} : { ageConfirmed: (_b = data.ageConfirmed) != null ? _b : userData.ageConfirmed }
+            ...((_c = data.ageConfirmed) != null ? _c : userData.ageConfirmed) === void 0 ? {} : { ageConfirmed: (_d = data.ageConfirmed) != null ? _d : userData.ageConfirmed }
           };
           emitter.emit("user_changed", {
             type: "user_changed",
@@ -608,6 +617,66 @@
         };
       });
     }
+    function openAgeVerificationPopup(url, callbackOrigin) {
+      try {
+        requireInitialized();
+      } catch (error) {
+        return Promise.reject(error);
+      }
+      if (cancelAgePopup) return Promise.reject(makeError(ErrorCodes.OPERATION_IN_PROGRESS, "Age verification popup is already open"));
+      var popupUrl;
+      var expectedOrigin;
+      try {
+        popupUrl = new URL(url, browserWindow.location.href);
+        var entryUrl = new URL(browserWindow.location.href);
+        if (!popupUrl.searchParams.has("utm_campaign") && entryUrl.searchParams.has("utm_campaign")) {
+          popupUrl.searchParams.set("utm_campaign", entryUrl.searchParams.get("utm_campaign"));
+        }
+        var callbackUrl = new URL(callbackOrigin || popupUrl.origin, browserWindow.location.href);
+        if (!["https:", "http:"].includes(popupUrl.protocol) || !["https:", "http:"].includes(callbackUrl.protocol) || popupUrl.username || popupUrl.password) throw new Error("Invalid URL");
+        expectedOrigin = callbackUrl.origin;
+      } catch (_) {
+        return Promise.reject(makeError(ErrorCodes.INVALID_CONFIG, "Invalid age verification popup URL"));
+      }
+      var popup = browserWindow.open(popupUrl.toString(), "hooligapps_age_popup", "width=480,height=720,resizable=yes,scrollbars=yes");
+      if (!popup) return Promise.reject(makeError(ErrorCodes.INVALID_PAYLOAD, "Allow popups to verify your age"));
+      return new Promise(function(resolve, reject) {
+        var completed = false;
+        var closedInterval;
+        var timeoutId;
+        function finish(result, error) {
+          if (completed) return;
+          completed = true;
+          browserWindow.removeEventListener("message", onMessage, false);
+          browserWindow.clearInterval(closedInterval);
+          browserWindow.clearTimeout(timeoutId);
+          try {
+            popup.close();
+          } catch (_) {
+          }
+          cancelAgePopup = null;
+          if (error) reject(error);
+          else resolve(result);
+        }
+        function onMessage(event) {
+          if (event.origin !== expectedOrigin || event.source !== popup) return;
+          var data = event.data;
+          if (!data || data.type !== "age_verification_done") return;
+          if (data.confirmed === true) finish({ confirmed: true });
+          else if (data.confirmed === false && ["cancelled", "failed", "pending"].includes(data.reason)) finish({ confirmed: false, reason: data.reason });
+        }
+        browserWindow.addEventListener("message", onMessage, false);
+        closedInterval = browserWindow.setInterval(function() {
+          if (popup.closed) finish({ confirmed: false, reason: "cancelled" });
+        }, 500);
+        timeoutId = browserWindow.setTimeout(function() {
+          finish(null, makeError(ErrorCodes.OPERATION_TIMEOUT, "Age verification timed out"));
+        }, 9e5);
+        cancelAgePopup = function() {
+          finish({ confirmed: false, reason: "cancelled" });
+        };
+      });
+    }
     var HApps = {
       ErrorCodes,
       init,
@@ -634,6 +703,7 @@
           userId: userData.userId,
           userName: userData.userName,
           verified: userData.verified,
+          ...userData.locale === void 0 ? {} : { locale: userData.locale },
           ...userData.ageConfirmed === void 0 ? {} : { ageConfirmed: userData.ageConfirmed }
         } : null;
       },
@@ -668,6 +738,7 @@
         });
       },
       openIdpAuthPopup,
+      openAgeVerificationPopup,
       openPayment: async function(orderId) {
         requireInitialized();
         if (typeof orderId !== "string" || !orderId) {
@@ -746,6 +817,7 @@
           readyTimeoutId = null;
         }
         if (cancelAuthPopup) cancelAuthPopup();
+        if (cancelAgePopup) cancelAgePopup();
         cancelAuthPopup = null;
         if (activePayment) {
           browserWindow.clearTimeout(activePayment.timeoutId);
@@ -973,6 +1045,11 @@
           run(function() {
             client2.gameLoaded();
           });
+          break;
+        case "popup_age_verification":
+          client2.openAgeVerificationPopup(payload.url, payload.callbackOrigin).then(function(result) {
+            send({ type: "popup_age_verification_result", ...result });
+          }).catch(sendError);
           break;
         case "open_age_verification":
           run(function() {
